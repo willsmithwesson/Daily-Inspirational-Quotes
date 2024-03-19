@@ -21,8 +21,9 @@ fetch_and_save_quote() {
     fi
 
     # Extract the content and author from the JSON response
-    CONTENT=$(echo $QUOTE | jq -r $CONTENT_PATH)
-    AUTHOR=$(echo $QUOTE | jq -r $AUTHOR_PATH)
+    CONTENT_AND_AUTHOR=$(echo $QUOTE | jq -r "$CONTENT_PATH, $AUTHOR_PATH")
+    CONTENT=$(echo $CONTENT_AND_AUTHOR | cut -d',' -f1)
+    AUTHOR=$(echo $CONTENT_AND_AUTHOR | cut -d',' -f2)
 
     # Display the quote
     echo "\"$CONTENT\" - $AUTHOR"
