@@ -5,6 +5,14 @@ fetch_and_save_quote() {
     CONTENT_PATH=$2
     AUTHOR_PATH=$3
 
+    # Check if jq is installed
+    if ! command -v jq &> /dev/null
+    then
+        echo "jq could not be found"
+        echo "Installing jq..."
+        sudo apt-get install jq
+    fi
+
     # Fetch a quote from an online API
     QUOTE=$(curl -s $URL)
 
