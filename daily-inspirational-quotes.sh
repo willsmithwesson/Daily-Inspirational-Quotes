@@ -13,6 +13,12 @@ fetch_and_save_quote() {
         sudo apt-get install jq
     fi
 
+    # Check if internet connection is available
+    if ! ping -c 1 google.com > /dev/null 2>&1; then
+        echo "Error: Internet connection not available"
+        exit 1
+    fi
+
     # Fetch a quote from an online API
     QUOTE=$(curl -s $URL)
 
