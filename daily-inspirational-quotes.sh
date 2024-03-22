@@ -42,6 +42,11 @@ fetch_and_save_quote() {
     # Display the quote
     echo "\"$CONTENT\" - $AUTHOR"
 
+    # Check if the file exists, if not create one
+    if [ ! -f quotes.txt ]; then
+        touch quotes.txt
+    fi
+
     # Save the quote to a file
     echo "\"$CONTENT\" - $AUTHOR" >> quotes.txt
 }
