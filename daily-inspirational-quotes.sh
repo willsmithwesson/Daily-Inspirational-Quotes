@@ -47,8 +47,12 @@ fetch_and_save_quote() {
         touch quotes.txt
     fi
 
-    # Save the quote to a file
-    echo "\"$CONTENT\" - $AUTHOR" >> quotes.txt
+    # Check if the quote already exists in the file
+    if ! grep -Fxq "\"$CONTENT\" - $AUTHOR" quotes.txt
+    then
+        # Save the quote to a file
+        echo "\"$CONTENT\" - $AUTHOR" >> quotes.txt
+    fi
 }
 
 # Specify the category
