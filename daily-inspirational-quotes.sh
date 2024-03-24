@@ -4,6 +4,7 @@ fetch_and_save_quote() {
     URL=$1
     CONTENT_PATH=$2
     AUTHOR_PATH=$3
+    FILE_NAME=$4
 
     # Check if jq is installed
     if ! command -v jq &> /dev/null
@@ -43,23 +44,31 @@ fetch_and_save_quote() {
     echo "\"$CONTENT\" - $AUTHOR"
 
     # Check if the file exists, if not create one
-    if [ ! -f quotes.txt ]; then
-        touch quotes.txt
+    if [ ! -f $FILE_NAME ]; then
+        touch $FILE_NAME
     fi
 
     # Check if the quote already exists in the file
-    if ! grep -Fxq "\"$CONTENT\" - $AUTHOR" quotes.txt
+    if ! grep -Fxq "\"$CONTENT\" - $AUTHOR" $FILE_NAME
     then
         # Save the quote to a file
-        echo "\"$CONTENT\" - $AUTHOR" >> quotes.txt
+        echo "\"$CONTENT\" - $AUTHOR" >> $FILE_NAME
     fi
 }
 
 # Specify the category
 CATEGORY="inspire"
 
+# Check if the file size exceeds 1MB
+if [ $(stat -c%s "quotes.txt") -gt 1048576 ]; then
+    TIMESTAMP=$(date +%s)
+    FILE_NAME="quotes_$TIMESTAMP.txt"
+else
+    FILE_NAME="quotes.txt"
+fi
+
 # Fetch and save a random quote
-fetch_and_save_quote "https://api.quotable.io/random?tags=$CATEGORY" '.content' '.author'
+fetch_and_save_quote "https://api.quotable.io/random?tags=$CATEGORY" '.content' '.author' $FILE_NAME
 
 # Fetch and save quote of the day
-fetch_and_save_quote "https://api.theysaidso.com/qod.json" '.contents.quotes[0].quote' '.contents.quotes[0].author'
+fetch_and_save_quote "https://api.theysaidso.com/qod.json" '.contents.quotes[0].quote' '.contents.quotes[0].author' $FILE_NAME
