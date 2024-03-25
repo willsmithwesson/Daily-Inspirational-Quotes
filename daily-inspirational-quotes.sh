@@ -5,18 +5,19 @@ fetch_and_save_quote() {
     CONTENT_PATH=$2
     AUTHOR_PATH=$3
     FILE_NAME=$4
+    ERROR_LOG="error_log.txt"
 
     # Check if jq is installed
     if ! command -v jq &> /dev/null
     then
-        echo "jq could not be found"
-        echo "Installing jq..."
+        echo "jq could not be found" | tee -a $ERROR_LOG
+        echo "Installing jq..." | tee -a $ERROR_LOG
         sudo apt-get install jq
     fi
 
     # Check if internet connection is available
     if ! ping -c 1 google.com > /dev/null 2>&1; then
-        echo "Error: Internet connection not available"
+        echo "Error: Internet connection not available" | tee -a $ERROR_LOG
         exit 1
     fi
 
@@ -25,13 +26,13 @@ fetch_and_save_quote() {
 
     # Check if the API request was successful
     if [ $? -ne 0 ]; then
-        echo "Error: Unable to fetch quote from API"
+        echo "Error: Unable to fetch quote from API" | tee -a $ERROR_LOG
         exit 1
     fi
 
     # Check if the API returned an error
     if echo $QUOTE | jq -e .error > /dev/null 2>&1; then
-        echo "Error: API returned an error - $(echo $QUOTE | jq -r '.error')"
+        echo "Error: API returned an error - $(echo $QUOTE | jq -r '.error')" | tee -a $ERROR_LOG
         exit 1
     fi
 
