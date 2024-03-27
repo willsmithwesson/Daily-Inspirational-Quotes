@@ -4,7 +4,6 @@ fetch_and_save_quote() {
     URL=$1
     CONTENT_PATH=$2
     AUTHOR_PATH=$3
-    FILE_NAME=$4
     ERROR_LOG="error_log.txt"
 
     # Check if jq is installed
@@ -55,21 +54,22 @@ fetch_and_save_quote() {
         # Save the quote to a file
         echo "\"$CONTENT\" - $AUTHOR" >> $FILE_NAME
     fi
+
+    # Check if the file size exceeds 1MB
+    if [ $(stat -c%s "$FILE_NAME") -gt 1048576 ]; then
+        TIMESTAMP=$(date +%s)
+        FILE_NAME="quotes_$TIMESTAMP.txt"
+    fi
 }
 
 # Specify the category
 CATEGORY="inspire"
 
-# Check if the file size exceeds 1MB
-if [ $(stat -c%s "quotes.txt") -gt 1048576 ]; then
-    TIMESTAMP=$(date +%s)
-    FILE_NAME="quotes_$TIMESTAMP.txt"
-else
-    FILE_NAME="quotes.txt"
-fi
+# Initialize the file name
+FILE_NAME="quotes.txt"
 
 # Fetch and save a random quote
-fetch_and_save_quote "https://api.quotable.io/random?tags=$CATEGORY" '.content' '.author' $FILE_NAME
+fetch_and_save_quote "https://api.quotable.io/random?tags=$CATEGORY" '.content' '.author'
 
 # Fetch and save quote of the day
-fetch_and_save_quote "https://api.theysaidso.com/qod.json" '.contents.quotes[0].quote' '.contents.quotes[0].author' $FILE_NAME
+fetch_and_save_quote "https://api.theysaidso.com/qod.json" '.contents.quotes[0].quote' '.contents.quotes[0].author'
