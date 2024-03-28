@@ -51,14 +51,15 @@ fetch_and_save_quote() {
     # Check if the quote already exists in the file
     if ! grep -Fxq "\"$CONTENT\" - $AUTHOR" $FILE_NAME
     then
+        # Check if the file size exceeds 1MB
+        if [ $(stat -c%s "$FILE_NAME") -gt 1048576 ]; then
+            TIMESTAMP=$(date +%s)
+            FILE_NAME="quotes_$TIMESTAMP.txt"
+            touch $FILE_NAME
+        fi
+
         # Save the quote to a file
         echo "\"$CONTENT\" - $AUTHOR" >> $FILE_NAME
-    fi
-
-    # Check if the file size exceeds 1MB
-    if [ $(stat -c%s "$FILE_NAME") -gt 1048576 ]; then
-        TIMESTAMP=$(date +%s)
-        FILE_NAME="quotes_$TIMESTAMP.txt"
     fi
 }
 
