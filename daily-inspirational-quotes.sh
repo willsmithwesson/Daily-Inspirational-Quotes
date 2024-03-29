@@ -60,6 +60,7 @@ fetch_and_save_quote() {
 
         # Save the quote to a file
         echo "\"$CONTENT\" - $AUTHOR" >> $FILE_NAME
+        echo "Quote fetched and saved on $(date)" >> $FILE_NAME
     fi
 }
 
