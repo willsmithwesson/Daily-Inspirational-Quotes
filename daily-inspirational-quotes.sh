@@ -5,6 +5,7 @@ fetch_and_save_quote() {
     CONTENT_PATH=$2
     AUTHOR_PATH=$3
     ERROR_LOG="error_log.txt"
+    SUCCESS_LOG="success_log.txt"
 
     # Check if jq is installed
     if ! command -v jq &> /dev/null
@@ -61,6 +62,7 @@ fetch_and_save_quote() {
         # Save the quote to a file
         echo "\"$CONTENT\" - $AUTHOR" >> $FILE_NAME
         echo "Quote fetched and saved on $(date)" >> $FILE_NAME
+        echo "Quote fetched and saved on $(date)" >> $SUCCESS_LOG
     fi
 }
 
