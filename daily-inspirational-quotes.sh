@@ -21,6 +21,12 @@ fetch_and_save_quote() {
         exit 1
     fi
 
+    # Check if the API URL is valid
+    if ! curl -Is $URL | head -n 1 | grep "HTTP/1.[01] [23].." > /dev/null; then
+        echo "Error: Invalid API URL" | tee -a $ERROR_LOG
+        exit 1
+    fi
+
     # Fetch a quote from an online API
     QUOTE=$(curl -s $URL)
 
