@@ -47,6 +47,11 @@ fetch_and_save_quote() {
     CONTENT=$(echo $CONTENT_AND_AUTHOR | cut -d',' -f1)
     AUTHOR=$(echo $CONTENT_AND_AUTHOR | cut -d',' -f2)
 
+    # Check if the author is empty
+    if [ -z "$AUTHOR" ]; then
+        AUTHOR="Unknown"
+    fi
+
     # Check if the quote is empty
     if [ -z "$CONTENT" ]; then
         echo "Error: Quote is empty" | tee -a $ERROR_LOG
