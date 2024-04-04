@@ -84,7 +84,7 @@ fetch_and_save_quote() {
 }
 
 # Specify the category
-CATEGORY="inspire"
+CATEGORY=${1:-"inspire"}
 
 # Initialize the file name
 FILE_NAME="quotes.txt"
