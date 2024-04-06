@@ -4,6 +4,7 @@ fetch_and_save_quote() {
     URL=$1
     CONTENT_PATH=$2
     AUTHOR_PATH=$3
+    FILE_NAME=$4
     ERROR_LOG="error_log.txt"
     SUCCESS_LOG="success_log.txt"
 
@@ -86,11 +87,11 @@ fetch_and_save_quote() {
 # Specify the category
 CATEGORY=${1:-"inspire"}
 
-# Initialize the file name
-FILE_NAME="quotes.txt"
+# Specify the file name
+FILE_NAME=${2:-"quotes.txt"}
 
 # Fetch and save a random quote
-fetch_and_save_quote "https://api.quotable.io/random?tags=$CATEGORY" '.content' '.author'
+fetch_and_save_quote "https://api.quotable.io/random?tags=$CATEGORY" '.content' '.author' $FILE_NAME
 
 # Fetch and save quote of the day
-fetch_and_save_quote "https://api.theysaidso.com/qod.json" '.contents.quotes[0].quote' '.contents.quotes[0].author'
+fetch_and_save_quote "https://api.theysaidso.com/qod.json" '.contents.quotes[0].quote' '.contents.quotes[0].author' $FILE_NAME
