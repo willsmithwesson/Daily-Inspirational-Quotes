@@ -36,7 +36,7 @@ fetch_and_save_quote() {
 
         # Check if the API request was successful
         if [ $? -ne 0 ]; then
-            echo "Erroru: Unable to fetch quote from API" | tee -a $ERROR_LOG
+            echo "Error: Unable to fetch quote from API" | tee -a $ERROR_LOG
             exit 1
         fi
 
@@ -84,6 +84,8 @@ fetch_and_save_quote() {
             echo "\"$CONTENT\" - $AUTHOR" >> $FILE_NAME
             echo "Quote fetched and saved on $(date)" >> $FILE_NAME
             echo "Quote fetched and saved on $(date)" >> $SUCCESS_LOG
+        else
+            echo "Quote already exists in the file. Skipping..." | tee -a $SUCCESS_LOG
         fi
     done
 }
