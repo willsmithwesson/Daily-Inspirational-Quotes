@@ -6,6 +6,7 @@ fetch_and_save_quote() {
     AUTHOR_PATH=$3
     FILE_NAME=$4
     NUM_QUOTES=$5
+    AUTHOR_NAME=$6
     ERROR_LOG="error_log.txt"
     SUCCESS_LOG="success_log.txt"
 
@@ -62,6 +63,11 @@ fetch_and_save_quote() {
             exit 1
         fi
 
+        # If an author is specified, check if the quote is from the specified author
+        if [ -n "$AUTHOR_NAME" ] && [ "$AUTHOR" != "$AUTHOR_NAME" ]; then
+            continue
+        fi
+
         # Display the quote
         echo "\"$CONTENT\" - $AUTHOR"
 
@@ -99,8 +105,11 @@ FILE_NAME=${2:-"quotes.txt"}
 # Specify the number of quotes
 NUM_QUOTES=${3:-1}
 
+# Specify the author
+AUTHOR_NAME=${4}
+
 # Fetch and save a random quote
-fetch_and_save_quote "https://api.quotable.io/random?tags=$CATEGORY" '.content' '.author' $FILE_NAME $NUM_QUOTES
+fetch_and_save_quote "https://api.quotable.io/random?tags=$CATEGORY" '.content' '.author' $FILE_NAME $NUM_QUOTES $AUTHOR_NAME
 
 # Fetch and save quote of the day
-fetch_and_save_quote "https://api.theysaidso.com/qod.json" '.contents.quotes[0].quote' '.contents.quotes[0].author' $FILE_NAME $NUM_QUOTES
+fetch_and_save_quote "https://api.theysaidso.com/qod.json" '.contents.quotes[0].quote' '.contents.quotes[0].author' $FILE_NAME $NUM_QUOTES $AUTHOR_NAME
