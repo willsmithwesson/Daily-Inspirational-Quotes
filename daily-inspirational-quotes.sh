@@ -47,6 +47,13 @@ fetch_and_save_quote() {
             exit 1
         fi
 
+        # Check if the API is rate-limited
+        if echo $QUOTE | jq -e .rateLimit > /dev/null 2>&1; then
+            RATE_LIMIT=$(echo $QUOTE | jq -r '.rateLimit')
+            echo "API is rate-limited. Waiting for $RATE_LIMIT seconds before next request..." | tee -a $SUCCESS_LOG
+            sleep $RATE_LIMIT
+        fi
+
         # Extract the content and author from the JSON response
         CONTENT_AND_AUTHOR=$(echo $QUOTE | jq -r "$CONTENT_PATH, $AUTHOR_PATH")
         CONTENT=$(echo $CONTENT_AND_AUTHOR | cut -d',' -f1)
