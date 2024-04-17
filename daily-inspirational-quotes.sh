@@ -9,6 +9,7 @@ fetch_and_save_quote() {
     AUTHOR_NAME=$6
     ERROR_LOG="error_log.txt"
     SUCCESS_LOG="success_log.txt"
+    MAX_RETRIES=3
 
     # Check if jq is installed
     if ! command -v jq &> /dev/null
@@ -32,74 +33,80 @@ fetch_and_save_quote() {
 
     for ((i=0; i<$NUM_QUOTES; i++))
     do
-        # Fetch a quote from an online API
-        QUOTE=$(curl -s $URL)
+        for ((j=0; j<$MAX_RETRIES; j++))
+        do
+            # Fetch a quote from an online API
+            QUOTE=$(curl -s $URL)
 
-        # Check if the API request was successful
-        if [ $? -ne 0 ]; then
-            echo "Error: Unable to fetch quote from API" | tee -a $ERROR_LOG
-            exit 1
-        fi
+            # Check if the API request was successful
+            if [ $? -ne 0 ]; then
+                echo "Error: Unable to fetch quote from API" | tee -a $ERROR_LOG
+                continue
+            fi
 
-        # Check if the API returned an error
-        if echo $QUOTE | jq -e .error > /dev/null 2>&1; then
-            echo "Error: API returned an error - $(echo $QUOTE | jq -r '.error')" | tee -a $ERROR_LOG
-            exit 1
-        fi
+            # Check if the API returned an error
+            if echo $QUOTE | jq -e .error > /dev/null 2>&1; then
+                echo "Error: API returned an error - $(echo $QUOTE | jq -r '.error')" | tee -a $ERROR_LOG
+                continue
+            fi
 
-        # Check if the API is rate-limited
-        if echo $QUOTE | jq -e .rateLimit > /dev/null 2>&1; then
-            RATE_LIMIT=$(echo $QUOTE | jq -r '.rateLimit')
-            echo "API is rate-limited. Waiting for $RATE_LIMIT seconds before next request..." | tee -a $SUCCESS_LOG
-            sleep $RATE_LIMIT
-        fi
+            # Check if the API is rate-limited
+            if echo $QUOTE | jq -e .rateLimit > /dev/null 2>&1; then
+                RATE_LIMIT=$(echo $QUOTE | jq -r '.rateLimit')
+                echo "API is rate-limited. Waiting for $RATE_LIMIT seconds before next request..." | tee -a $SUCCESS_LOG
+                sleep $RATE_LIMIT
+            fi
 
-        # Extract the content and author from the JSON response
-        CONTENT_AND_AUTHOR=$(echo $QUOTE | jq -r "$CONTENT_PATH, $AUTHOR_PATH")
-        CONTENT=$(echo $CONTENT_AND_AUTHOR | cut -d',' -f1)
-        AUTHOR=$(echo $CONTENT_AND_AUTHOR | cut -d',' -f2)
+            # Extract the content and author from the JSON response
+            CONTENT_AND_AUTHOR=$(echo $QUOTE | jq -r "$CONTENT_PATH, $AUTHOR_PATH")
+            CONTENT=$(echo $CONTENT_AND_AUTHOR | cut -d',' -f1)
+            AUTHOR=$(echo $CONTENT_AND_AUTHOR | cut -d',' -f2)
 
-        # Check if the author is empty
-        if [ -z "$AUTHOR" ]; then
-            AUTHOR="Unknown"
-        fi
+            # Check if the author is empty
+            if [ -z "$AUTHOR" ]; then
+                AUTHOR="Unknown"
+            fi
 
-        # Check if the quote is empty
-        if [ -z "$CONTENT" ]; then
-            echo "Error: Quote is empty" | tee -a $ERROR_LOG
-            exit 1
-        fi
+            # Check if the quote is empty
+            if [ -z "$CONTENT" ]; then
+                echo "Error: Quote is empty" | tee -a $ERROR_LOG
+                continue
+            fi
 
-        # If an author is specified, check if the quote is from the specified author
-        if [ -n "$AUTHOR_NAME" ] && [ "$AUTHOR" != "$AUTHOR_NAME" ]; then
-            continue
-        fi
+            # If an author is specified, check if the quote is from the specified author
+            if [ -n "$AUTHOR_NAME" ] && [ "$AUTHOR" != "$AUTHOR_NAME" ]; then
+                continue
+            fi
 
-        # Display the quote
-        echo "\"$CONTENT\" - $AUTHOR"
+            # Display the quote
+            echo "\"$CONTENT\" - $AUTHOR"
 
-        # Check if the file exists, if not create one
-        if [ ! -f $FILE_NAME ]; then
-            touch $FILE_NAME
-        fi
-
-        # Check if the quote already exists in the file
-        if ! grep -Fxq "\"$CONTENT\" - $AUTHOR" $FILE_NAME
-        then
-            # Check if the file size exceeds 1MB
-            if [ $(stat -c%s "$FILE_NAME") -gt 1048576 ]; then
-                TIMESTAMP=$(date +%s)
-                FILE_NAME="quotes_$TIMESTAMP.txt"
+            # Check if the file exists, if not create one
+            if [ ! -f $FILE_NAME ]; then
                 touch $FILE_NAME
             fi
 
-            # Save the quote to a file
-            echo "\"$CONTENT\" - $AUTHOR" >> $FILE_NAME
-            echo "Quote fetched and saved on $(date)" >> $FILE_NAME
-            echo "Quote fetched and saved on $(date)" >> $SUCCESS_LOG
-        else
-            echo "Quote already exists in the file. Skipping..." | tee -a $SUCCESS_LOG
-        fi
+            # Check if the quote already exists in the file
+            if ! grep -Fxq "\"$CONTENT\" - $AUTHOR" $FILE_NAME
+            then
+                # Check if the file size exceeds 1MB
+                if [ $(stat -c%s "$FILE_NAME") -gt 1048576 ]; then
+                    TIMESTAMP=$(date +%s)
+                    FILE_NAME="quotes_$TIMESTAMP.txt"
+                    touch $FILE_NAME
+                fi
+
+                # Save the quote to a file
+                echo "\"$CONTENT\" - $AUTHOR" >> $FILE_NAME
+                echo "Quote fetched and saved on $(date)" >> $FILE_NAME
+                echo "Quote fetched and saved on $(date)" >> $SUCCESS_LOG
+            else
+                echo "Quote already exists in the file. Skipping..." | tee -a $SUCCESS_LOG
+            fi
+
+            # If we reach this point, the quote was successfully fetched and saved, so break the retry loop
+            break
+        done
     done
 }
 
