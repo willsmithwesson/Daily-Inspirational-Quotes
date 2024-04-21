@@ -78,6 +78,13 @@ fetch_and_save_quote() {
                 continue
             fi
 
+            # Check if the quote already exists in the file before making a request to the API
+            if grep -Fxq "\"$CONTENT\" - $AUTHOR" $FILE_NAME
+            then
+                echo "Quote already exists in the file. Skipping..." | tee -a $SUCCESS_LOG
+                continue
+            fi
+
             # Display the quote
             echo "\"$CONTENT\" - $AUTHOR"
 
@@ -86,23 +93,17 @@ fetch_and_save_quote() {
                 touch $FILE_NAME
             fi
 
-            # Check if the quote already exists in the file
-            if ! grep -Fxq "\"$CONTENT\" - $AUTHOR" $FILE_NAME
-            then
-                # Check if the file size exceeds 1MB
-                if [ $(stat -c%s "$FILE_NAME") -gt 1048576 ]; then
-                    TIMESTAMP=$(date +%s)
-                    FILE_NAME="quotes_$TIMESTAMP.txt"
-                    touch $FILE_NAME
-                fi
-
-                # Save the quote to a file
-                echo "\"$CONTENT\" - $AUTHOR" >> $FILE_NAME
-                echo "Quote fetched and saved on $(date)" >> $FILE_NAME
-                echo "Quote fetched and saved on $(date)" >> $SUCCESS_LOG
-            else
-                echo "Quote already exists in the file. Skipping..." | tee -a $SUCCESS_LOG
+            # Check if the file size exceeds 1MB
+            if [ $(stat -c%s "$FILE_NAME") -gt 1048576 ]; then
+                TIMESTAMP=$(date +%s)
+                FILE_NAME="quotes_$TIMESTAMP.txt"
+                touch $FILE_NAME
             fi
+
+            # Save the quote to a file
+            echo "\"$CONTENT\" - $AUTHOR" >> $FILE_NAME
+            echo "Quote fetched and saved on $(date)" >> $FILE_NAME
+            echo "Quote fetched and saved on $(date)" >> $SUCCESS_LOG
 
             # If we reach this point, the quote was successfully fetched and saved, so break the retry loop
             break
