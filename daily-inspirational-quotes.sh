@@ -4,9 +4,10 @@ fetch_and_save_quote() {
     URL=$1
     CONTENT_PATH=$2
     AUTHOR_PATH=$3
-    FILE_NAME=$4
-    NUM_QUOTES=$5
-    AUTHOR_NAME=$6
+    DIR_PATH=$4
+    FILE_NAME=$5
+    NUM_QUOTES=$6
+    AUTHOR_NAME=$7
     ERROR_LOG="error_log.txt"
     SUCCESS_LOG="success_log.txt"
     MAX_RETRIES=3
@@ -31,6 +32,13 @@ fetch_and_save_quote() {
         exit 1
     fi
 
+    # Check if the directory exists, if not create one
+    if [ ! -d $DIR_PATH ]; then
+        mkdir -p $DIR_PATH
+    fi
+
+    FILE_PATH="$DIR_PATH/$FILE_NAME"
+
     for ((i=0; i<$NUM_QUOTES; i++))
     do
         for ((j=0; j<$MAX_RETRIES; j++))
@@ -48,13 +56,6 @@ fetch_and_save_quote() {
             if echo $QUOTE | jq -e .error > /dev/null 2>&1; then
                 echo "Error: API returned an error - $(echo $QUOTE | jq -r '.error')" | tee -a $ERROR_LOG
                 continue
-            fi
-
-            # Check if the API is rate-limited
-            if echo $QUOTE | jq -e .rateLimit > /dev/null 2>&1; then
-                RATE_LIMIT=$(echo $QUOTE | jq -r '.rateLimit')
-                echo "API is rate-limited. Waiting for $RATE_LIMIT seconds before next request..." | tee -a $SUCCESS_LOG
-                sleep $RATE_LIMIT
             fi
 
             # Extract the content and author from the JSON response
@@ -79,7 +80,7 @@ fetch_and_save_quote() {
             fi
 
             # Check if the quote already exists in the file before making a request to the API
-            if grep -Fxq "\"$CONTENT\" - $AUTHOR" $FILE_NAME
+            if grep -Fxq "\"$CONTENT\" - $AUTHOR" $FILE_PATH
             then
                 echo "Quote already exists in the file. Skipping..." | tee -a $SUCCESS_LOG
                 continue
@@ -89,20 +90,20 @@ fetch_and_save_quote() {
             echo "\"$CONTENT\" - $AUTHOR"
 
             # Check if the file exists, if not create one
-            if [ ! -f $FILE_NAME ]; then
-                touch $FILE_NAME
+            if [ ! -f $FILE_PATH ]; then
+                touch $FILE_PATH
             fi
 
             # Check if the file size exceeds 1MB
-            if [ $(stat -c%s "$FILE_NAME") -gt 1048576 ]; then
+            if [ $(stat -c%s "$FILE_PATH") -gt 1048576 ]; then
                 TIMESTAMP=$(date +%s)
-                FILE_NAME="quotes_$TIMESTAMP.txt"
-                touch $FILE_NAME
+                FILE_PATH="$DIR_PATH/quotes_$TIMESTAMP.txt"
+                touch $FILE_PATH
             fi
 
             # Save the quote to a file
-            echo "\"$CONTENT\" - $AUTHOR" >> $FILE_NAME
-            echo "Quote fetched and saved on $(date)" >> $FILE_NAME
+            echo "\"$CONTENT\" - $AUTHOR" >> $FILE_PATH
+            echo "Quote fetched and saved on $(date)" >> $FILE_PATH
             echo "Quote fetched and saved on $(date)" >> $SUCCESS_LOG
 
             # If we reach this point, the quote was successfully fetched and saved, so break the retry loop
@@ -111,20 +112,23 @@ fetch_and_save_quote() {
     done
 }
 
+# Specify the directory
+DIR_PATH=${1:-"./quotes"}
+
 # Specify the category
-CATEGORY=${1:-"inspire"}
+CATEGORY=${2:-"inspire"}
 
 # Specify the file name
-FILE_NAME=${2:-"quotes.txt"}
+FILE_NAME=${3:-"quotes.txt"}
 
 # Specify the number of quotes
-NUM_QUOTES=${3:-1}
+NUM_QUOTES=${4:-1}
 
 # Specify the author
-AUTHOR_NAME=${4}
+AUTHOR_NAME=${5}
 
 # Fetch and save a random quote
-fetch_and_save_quote "https://api.quotable.io/random?tags=$CATEGORY" '.content' '.author' $FILE_NAME $NUM_QUOTES $AUTHOR_NAME
+fetch_and_save_quote "https://api.quotable.io/random?tags=$CATEGORY" '.content' '.author' $DIR_PATH $FILE_NAME $NUM_QUOTES $AUTHOR_NAME
 
 # Fetch and save quote of the day
-fetch_and_save_quote "https://api.theysaidso.com/qod.json" '.contents.quotes[0].quote' '.contents.quotes[0].author' $FILE_NAME $NUM_QUOTES $AUTHOR_NAME
+fetch_and_save_quote "https://api.theysaidso.com/qod.json" '.contents.quotes[0].quote' '.contents.quotes[0].author' $DIR_PATH $FILE_NAME $NUM_QUOTES $AUTHOR_NAME
