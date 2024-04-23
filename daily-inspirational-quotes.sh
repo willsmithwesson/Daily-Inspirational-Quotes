@@ -1,5 +1,16 @@
 #!/bin/bash
 
+filename="$1"
+
+if [[ -f "$filename" ]]; then
+    while IFS= read -r line
+    do
+        echo "$line"
+    done < "$filename"
+else
+    echo "Error: File does not exist."
+fi
+
 fetch_and_save_quote() {
     URL=$1
     CONTENT_PATH=$2
