@@ -22,6 +22,7 @@ fetch_and_save_quote() {
     ERROR_LOG="error_log.txt"
     SUCCESS_LOG="success_log.txt"
     MAX_RETRIES=3
+    EMAIL="user@example.com"
 
     # Check if jq is installed
     if ! command -v jq &> /dev/null
@@ -29,6 +30,14 @@ fetch_and_save_quote() {
         echo "jq could not be found" | tee -a $ERROR_LOG
         echo "Installing jq..." | tee -a $ERROR_LOG
         sudo apt-get install jq
+    fi
+
+    # Check if mailutils is installed
+    if ! command -v mail &> /dev/null
+    then
+        echo "mail could not be found" | tee -a $ERROR_LOG
+        echo "Installing mailutils..." | tee -a $ERROR_LOG
+        sudo apt-get install mailutils
     fi
 
     # Check if internet connection is available
@@ -116,6 +125,9 @@ fetch_and_save_quote() {
             echo "\"$CONTENT\" - $AUTHOR" >> $FILE_PATH
             echo "Quote fetched and saved on $(date)" >> $FILE_PATH
             echo "Quote fetched and saved on $(date)" >> $SUCCESS_LOG
+
+            # Send an email notification
+            echo "Quote fetched and saved on $(date)" | mail -s "Quote Saved" $EMAIL
 
             # If we reach this point, the quote was successfully fetched and saved, so break the retry loop
             break
