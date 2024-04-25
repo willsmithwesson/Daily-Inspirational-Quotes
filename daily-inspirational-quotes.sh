@@ -23,6 +23,7 @@ fetch_and_save_quote() {
     SUCCESS_LOG="success_log.txt"
     MAX_RETRIES=3
     EMAIL="user@example.com"
+    TIME_LOG="time_log.txt"
 
     # Check if jq is installed
     if ! command -v jq &> /dev/null
@@ -63,6 +64,9 @@ fetch_and_save_quote() {
     do
         for ((j=0; j<$MAX_RETRIES; j++))
         do
+            # Start the timer
+            START_TIME=$(date +%s)
+
             # Fetch a quote from an online API
             QUOTE=$(curl -s $URL)
 
@@ -128,6 +132,11 @@ fetch_and_save_quote() {
 
             # Send an email notification
             echo "Quote fetched and saved on $(date)" | mail -s "Quote Saved" $EMAIL
+
+            # Stop the timer and log the time taken
+            END_TIME=$(date +%s)
+            TIME_TAKEN=$((END_TIME - START_TIME))
+            echo "Time taken to fetch and save quote: $TIME_TAKEN seconds" >> $TIME_LOG
 
             # If we reach this point, the quote was successfully fetched and saved, so break the retry loop
             break
