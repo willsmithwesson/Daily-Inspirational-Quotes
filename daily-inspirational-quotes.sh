@@ -59,13 +59,19 @@ fetch_and_save_quote() {
     fi
 
     FILE_PATH="$DIR_PATH/$FILE_NAME"
-
     for ((i=0; i<$NUM_QUOTES; i++))
     do
         for ((j=0; j<$MAX_RETRIES; j++))
         do
             # Start the timer
             START_TIME=$(date +%s)
+
+            # Check if the API is rate limited
+            RATE_LIMIT_REMAINING=$(curl -I -s $URL | grep -i "X-RateLimit-Remaining" | cut -d':' -f2 | tr -d '[:space:]')
+            if [ "$RATE_LIMIT_REMAINING" = "0" ]; then
+                echo "Error: API rate limit exceeded" | tee -a $ERROR_LOG
+                exit 1
+            fi
 
             # Fetch a quote from an online API
             QUOTE=$(curl -s $URL)
