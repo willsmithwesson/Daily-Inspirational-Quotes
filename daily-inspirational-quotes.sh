@@ -57,6 +57,13 @@ fetch_and_save_quote() {
     if [ ! -d $DIR_PATH ]; then
         mkdir -p $DIR_PATH
     fi
+    
+    # Check if the API is down for maintenance
+    MAINTENANCE_STATUS=$(curl -I -s $URL | grep -i "X-Maintenance-Mode" | cut -d':' -f2 | tr -d '[:space:]')
+    if [ "$MAINTENANCE_STATUS" = "true" ]; then
+        echo "Error: API is down for maintenance" | tee -a $ERROR_LOG
+        exit 1
+    fi
 
     FILE_PATH="$DIR_PATH/$FILE_NAME"
     for ((i=0; i<$NUM_QUOTES; i++))
