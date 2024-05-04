@@ -19,6 +19,7 @@ fetch_and_save_quote() {
     FILE_NAME=$5
     NUM_QUOTES=$6
     AUTHOR_NAME=$7
+    FILTER_WORDS=$8
     ERROR_LOG="error_log.txt"
     SUCCESS_LOG="success_log.txt"
     MAX_RETRIES=3
@@ -116,6 +117,17 @@ fetch_and_save_quote() {
                 continue
             fi
 
+            # Check if the quote contains any of the filter words
+            if [ -n "$FILTER_WORDS" ]; then
+                for word in $(echo $FILTER_WORDS | tr "," "\n")
+                do
+                    if [[ $CONTENT == *"$word"* ]]; then
+                        echo "Quote contains filter word: $word. Skipping..." | tee -a $SUCCESS_LOG
+                        continue 2
+                    fi
+                done
+            fi
+
             # Check if the quote already exists in the file before making a request to the API
             if grep -Fxq "\"$CONTENT\" - $AUTHOR" $FILE_PATH
             then
@@ -172,8 +184,11 @@ NUM_QUOTES=${4:-1}
 # Specify the author
 AUTHOR_NAME=${5}
 
+# Specify the filter words
+FILTER_WORDS=${6}
+
 # Fetch and save a random quote
-fetch_and_save_quote "https://api.quotable.io/random?tags=$CATEGORY" '.content' '.author' $DIR_PATH $FILE_NAME $NUM_QUOTES $AUTHOR_NAME
+fetch_and_save_quote "https://api.quotable.io/random?tags=$CATEGORY" '.content' '.author' $DIR_PATH $FILE_NAME $NUM_QUOTES $AUTHOR_NAME $FILTER_WORDS
 
 # Fetch and save quote of the day
-fetch_and_save_quote "https://api.theysaidso.com/qod.json" '.contents.quotes[0].quote' '.contents.quotes[0].author' $DIR_PATH $FILE_NAME $NUM_QUOTES $AUTHOR_NAME
+fetch_and_save_quote "https://api.theysaidso.com/qod.json" '.contents.quotes[0].quote' '.contents.quotes[0].author' $DIR_PATH $FILE_NAME $NUM_QUOTES $AUTHOR_NAME $FILTER_WORDS
