@@ -11,6 +11,61 @@ else
     echo "Error: File does not exist."
 fi
 
+usage() {
+    echo "Usage: $0 [OPTIONS]"
+    echo "Fetch and save quotes from online APIs."
+    echo
+    echo "Options:"
+    echo "  --dir-path DIR_PATH       Specify the directory to save the quotes. Default is './quotes'."
+    echo "  --category CATEGORY       Specify the category of the quotes. Default is 'inspire'."
+    echo "  --file-name FILE_NAME     Specify the file name to save the quotes. Default is 'quotes.txt'."
+    echo "  --num-quotes NUM_QUOTES   Specify the number of quotes to fetch. Default is 1."
+    echo "  --author-name AUTHOR_NAME Specify the author of the quotes."
+    echo "  --filter-words FILTER_WORDS Specify the words to filter the quotes."
+    echo "  --help                    Display this help and exit."
+    echo
+    echo "Examples:"
+    echo "  $0 --dir-path './my_quotes' --category 'life' --file-name 'life_quotes.txt' --num-quotes 5 --author-name 'Albert Einstein' --filter-words 'life,love'"
+    exit 1
+}
+
+# Parse command line options
+while (( "$#" )); do
+    case "$1" in
+        --dir-path)
+            DIR_PATH="$2"
+            shift 2
+            ;;
+        --category)
+            CATEGORY="$2"
+            shift 2
+            ;;
+        --file-name)
+            FILE_NAME="$2"
+            shift 2
+            ;;
+        --num-quotes)
+            NUM_QUOTES="$2"
+            shift 2
+            ;;
+        --author-name)
+            AUTHOR_NAME="$2"
+            shift 2
+            ;;
+        --filter-words)
+            FILTER_WORDS="$2"
+            shift 2
+            ;;
+        --help)
+            usage
+            ;;
+        *)
+            echo "Error: Invalid option '$1'"
+            usage
+            ;;
+    esac
+done
+
 fetch_and_save_quote() {
     URL=$1
     CONTENT_PATH=$2
